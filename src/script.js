@@ -3,13 +3,13 @@ import * as THREE from 'three';
 import {MindARThree} from 'mind-ar/dist/mindar-image-three.prod.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/Addons.js';
-import fbxModel from './assets/businnesCard/Talking.fbx?url';
+import glbModel from './assets/businnesCard/model_sunum_anim.glb?url';
+import previewVideo from './assets/businnesCard/technoSoftWebsitePreviewCorped2.mp4'
 import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
 import floorModelGlb from './assets/catalog/smart_home_interior_floor_plan.glb?url';
 import floorModelGlb2 from './assets/catalog/3d_view_office_floor_plan_virtual_reality.glb?url';
 import floorModelGlb3 from './assets/catalog/youtube_button.glb?url';
-// import targetMind from './assets/catalog/targetsMultiple3.mind?url';
-import targetMind from './assets/businnesCard/targets (3).mind?url';
+import targetMind from './assets/businnesCard/targets (5).mind?url';
 
 console.log(THREE);
 
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Video Player oluştur
             const video = document.createElement('video');
-            video.src = './assets/businnesCard/businessCardVideo.mp4'; // Video dosyanızın yolunu buraya ekleyin
+            video.src = previewVideo; // Video dosyanızın yolunu buraya ekleyin
             video.loop = true;
             video.muted = true;
             video.playsInline = true;
@@ -118,11 +118,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
             bgMesh.position.set(0, 0, -0.03); // Video mesh'in hemen arkasına yerleştir
 
-            // FBX model yükleyici ve animasyon
-            let body_01_mixer;
-            const loader = new FBXLoader();
-            //const body_01 = await loader.loadAsync('./assets/businnesCard/Talking.fbx');
-            const body_01 = await loader.loadAsync(fbxModel);
+            // GLB model yükleyici ve animasyon
+            let model_mixer;
+            const loader = new GLTFLoader();
+            const model = await loader.loadAsync(glbModel);
+            
             // Audio yükleyici
             const audioElement = new Audio(fbxModelAudio);
             let animationTimeout;
@@ -147,25 +147,25 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('touchstart', unlockAudio);
             document.addEventListener('click', unlockAudio);
 
-            // Scale and position adjustments for the FBX model
-            body_01.scale.set(0.5, 0.5, 0.5);
-            body_01.position.set(-0.5, 0, 0);
-            body_01.rotation.x = Math.PI/2;
-            body_01.rotation.y = 1;
+            // Scale and position adjustments for the GLB model
+            model.scene.scale.set(0.5, 0.5, 0.5);
+            model.scene.position.set(-0.4, 0, 0);
+            model.scene.rotation.x = Math.PI/2;
+            model.scene.rotation.y = 1;
 
             // Setup animation mixer
-            body_01_mixer = new THREE.AnimationMixer(body_01);
-            const body_01_action = body_01_mixer.clipAction(body_01.animations[0]);
-            body_01_action.play();
+            model_mixer = new THREE.AnimationMixer(model.scene);
+            const modelAction = model_mixer.clipAction(model.animations[0]);
+            modelAction.play();
 
             // Video player'ı konumlandır
-            videoMesh.position.set(0, 0.7, 0); // FBX modelinin sağına yerleştir
-            videoMesh.rotation.x = 1; // FBX modeli ile aynı düzlemde olması için
+            videoMesh.position.set(0, 0.7, 0);
+            videoMesh.rotation.x = 1;
 
             // Modelleri anchor'a ekle
             const anchor = mindarThree.addAnchor(0);
-            anchor.group.add(body_01);
-            videoMesh.add(bgMesh); // Arka planı video mesh'e ekle
+            anchor.group.add(model.scene);
+            videoMesh.add(bgMesh);
             anchor.group.add(videoMesh);
 
             // Target görünür olduğunda ve kaybolduğunda
@@ -175,12 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log('Audio playback failed:', error);
                     });
                 }
-                body_01_action.play();
+                modelAction.play();
                 video.play();
                 document.getElementById('videoControlsContainer').style.display = 'flex';
                 // 31 saniye sonra animasyonu durdur
                 animationTimeout = setTimeout(() => {
-                    body_01_action.paused = true;
+                    modelAction.paused = true;
                 }, 31000);
             };
 
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     audioElement.pause();
                     audioElement.currentTime = 0;
                 }
-                body_01_action.stop();
+                modelAction.stop();
                 video.pause();
                 document.getElementById('videoControlsContainer').style.display = 'none';
                 // Timeout'u temizle
@@ -260,8 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const delta = clock.getDelta();
                 
                 // Animasyon güncelleme
-                if (body_01_mixer) {
-                    body_01_mixer.update(delta);
+                if (model_mixer) {
+                    model_mixer.update(delta);
                 }
                 renderer.render(scene, camera);
             });
