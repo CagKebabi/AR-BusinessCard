@@ -9,7 +9,7 @@ import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
 import floorModelGlb from './assets/catalog/smart_home_interior_floor_plan.glb?url';
 import floorModelGlb2 from './assets/catalog/3d_view_office_floor_plan_virtual_reality.glb?url';
 import floorModelGlb3 from './assets/catalog/youtube_button.glb?url';
-import targetMind from './assets/businnesCard/targets (5).mind?url';
+import targetMind from './assets/businnesCard/targetcanvadesign.mind?url';
 
 console.log(THREE);
 
