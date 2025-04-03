@@ -9,7 +9,7 @@ import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
 import floorModelGlb from './assets/catalog/smart_home_interior_floor_plan.glb?url';
 import floorModelGlb2 from './assets/catalog/3d_view_office_floor_plan_virtual_reality.glb?url';
 import floorModelGlb3 from './assets/catalog/youtube_button.glb?url';
-import targetMind from './assets/businnesCard/targetcanvadesign.mind?url';
+import targetMind from './assets/businnesCard/targetcanvadesign2.mind?url';
 
 console.log(THREE);
 
@@ -118,6 +118,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
             bgMesh.position.set(0, 0, -0.03); // Video mesh'in hemen arkasına yerleştir
 
+            // Platform (Cylinder)
+            const platformGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 32);
+            const platformMaterial = new THREE.MeshBasicMaterial({
+                color: 0x1b2a47,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.8
+            });
+            const platformMesh = new THREE.Mesh(platformGeometry, platformMaterial);
+            platformMesh.scale.set(0.5, 0.5, 0.5);
+            platformMesh.position.set(0.65, -0.32, 0.2);
+            platformMesh.rotation.y = Math.PI/2;
+
             // GLB model yükleyici ve animasyon
             let model_mixer;
             const loader = new GLTFLoader();
@@ -149,27 +162,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Scale and position adjustments for the GLB model
             model.scene.scale.set(0.5, 0.5, 0.5);
-            model.scene.position.set(-0.4, 0, 0);
-            model.scene.rotation.x = Math.PI/2;
-            model.scene.rotation.y = 1;
+            model.scene.position.set(0.65, -0.3, 0.2);
+            model.scene.rotation.x = 0;
+            model.scene.rotation.y = 0.2;
 
             // Setup animation mixer
             model_mixer = new THREE.AnimationMixer(model.scene);
             const modelAction = model_mixer.clipAction(model.animations[0]);
             modelAction.play();
 
+            // Play/Pause button functionality
+            const playButton = document.getElementById('playButton');
+            let isPlaying = true;
+            let timeoutStartTime = 0;
+            let remainingTimeout = 31000;
+
+            playButton.addEventListener('click', () => {
+                if (isPlaying) {
+                    // Pause everything
+                    if (hasInteracted) {
+                        audioElement.pause();
+                    }
+                    modelAction.paused = true;
+                    video.pause();
+                    playButton.classList.add('paused');
+                    
+                    // Calculate remaining timeout time
+                    if (animationTimeout) {
+                        clearTimeout(animationTimeout);
+                        const elapsedTime = Date.now() - timeoutStartTime;
+                        remainingTimeout = Math.max(31000 - elapsedTime, 0);
+                    }
+                } else {
+                    // Resume everything
+                    if (hasInteracted) {
+                        audioElement.play().catch(error => {
+                            console.log('Audio playback failed:', error);
+                        });
+                    }
+                    modelAction.paused = false;
+                    video.play();
+                    playButton.classList.remove('paused');
+
+                    // Resume timeout with remaining time
+                    if (remainingTimeout > 0) {
+                        timeoutStartTime = Date.now();
+                        animationTimeout = setTimeout(() => {
+                            modelAction.paused = true;
+                        }, remainingTimeout);
+                    }
+                }
+                isPlaying = !isPlaying;
+            });
+
             // Video player'ı konumlandır
             videoMesh.position.set(0, 0.7, 0);
-            videoMesh.rotation.x = 1;
+            videoMesh.rotation.x = 0;
 
             // Modelleri anchor'a ekle
             const anchor = mindarThree.addAnchor(0);
             anchor.group.add(model.scene);
             videoMesh.add(bgMesh);
             anchor.group.add(videoMesh);
+            anchor.group.add(platformMesh);
 
             // Target görünür olduğunda ve kaybolduğunda
             anchor.onTargetFound = () => {
+                playButton.classList.remove('paused');
                 if (hasInteracted) {
                     audioElement.play().catch(error => {
                         console.log('Audio playback failed:', error);
@@ -179,6 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 video.play();
                 document.getElementById('videoControlsContainer').style.display = 'flex';
                 // 31 saniye sonra animasyonu durdur
+                timeoutStartTime = Date.now();
+                remainingTimeout = 31000;
                 animationTimeout = setTimeout(() => {
                     modelAction.paused = true;
                 }, 31000);
@@ -192,46 +253,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 modelAction.stop();
                 video.pause();
                 document.getElementById('videoControlsContainer').style.display = 'none';
+                playButton.classList.add('paused');
                 // Timeout'u temizle
                 if (animationTimeout) {
                     clearTimeout(animationTimeout);
                 }
             };
-
-            // Video kontrollerini oluştur
-            // const controls = document.createElement('div');
-            // controls.style.position = 'fixed';
-            // controls.style.bottom = '20px';
-            // controls.style.left = '20px';
-            // controls.style.zIndex = '1000';
-            // controls.innerHTML = `
-            //     <button id="playPause">Play</button>
-            //     <div>
-            //         <label>Rotation X: <input type="range" id="rotationX" min="-180" max="180" value="90"></label>
-            //         <label>Rotation Y: <input type="range" id="rotationY" min="-180" max="180" value="0"></label>
-            //         <label>Rotation Z: <input type="range" id="rotationZ" min="-180" max="180" value="0"></label>
-            //     </div>
-            //     <div>
-            //         <label>Position X: <input type="range" id="positionX" min="-2" max="2" value="0.7" step="0.1"></label>
-            //         <label>Position Y: <input type="range" id="positionY" min="-2" max="2" value="0" step="0.1"></label>
-            //         <label>Position Z: <input type="range" id="positionZ" min="-2" max="2" value="0" step="0.1"></label>
-            //     </div>
-            //     <div>
-            //         <label>Scale: <input type="range" id="scale" min="0.1" max="2" value="1" step="0.1"></label>
-            //     </div>
-            // `;
-            // document.body.appendChild(controls);
-
-            // Kontrol olaylarını dinle
-            // document.getElementById('playPause').addEventListener('click', () => {
-            //     if (video.paused) {
-            //         video.play();
-            //         document.getElementById('playPause').textContent = 'Pause';
-            //     } else {
-            //         video.pause();
-            //         document.getElementById('playPause').textContent = 'Play';
-            //     }
-            // });
 
             // Rotasyon kontrollerini dinle
             ['X', 'Y', 'Z'].forEach(axis => {
