@@ -4,12 +4,12 @@ import {MindARThree} from 'mind-ar/dist/mindar-image-three.prod.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/Addons.js';
 import glbModel from './assets/businnesCard/model_sunum_anim.glb?url';
-import previewVideo from './assets/businnesCard/technoSoftWebsitePreviewCorped2.mp4'
+import previewVideo from './assets/businnesCard/technoSoftWebsitePreviewCorped3.mp4'
 import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
 import floorModelGlb from './assets/catalog/smart_home_interior_floor_plan.glb?url';
 import floorModelGlb2 from './assets/catalog/3d_view_office_floor_plan_virtual_reality.glb?url';
 import floorModelGlb3 from './assets/catalog/youtube_button.glb?url';
-import targetMind from './assets/businnesCard/targetcanvadesign2.mind?url';
+import targetMind from './assets/businnesCard/vcard2.mind?url';
 
 console.log(THREE);
 
@@ -134,30 +134,69 @@ document.addEventListener('DOMContentLoaded', () => {
             // GLB model yükleyici ve animasyon
             let model_mixer;
             const loader = new GLTFLoader();
-            const model = await loader.loadAsync(glbModel);
+            const model = await loader.loadAsync(glbModel, (xhr) => {
+                const yuzde = Math.round((xhr.loaded / xhr.total) * 100);
+                console.log(`3D Model Yükleniyor: %${yuzde}`);
+                document.getElementById('progressContainer').innerText = `Yükleniyor: %${yuzde}`;
+                if (yuzde === 100) {
+                    console.log('3D Model yükleme tamamlandı! 🚀');
+                    document.getElementById('touchToScreenContent').style.display = 'block';
+                    document.getElementById('progressContainer').style.display = 'none';
+                }
+            });
             
             // Audio yükleyici
             const audioElement = new Audio(fbxModelAudio);
             let animationTimeout;
             let hasInteracted = false;
 
-            // iOS için ses kilidini açma fonksiyonu
+            // Mobil cihazlar için ses kilidini açma fonksiyonu
             const unlockAudio = async () => {
                 try {
-                    await audioElement.play();
-                    audioElement.pause();
+                    // Ses durumunu kontrol et
+                    console.log('Ses durumu:', audioElement.readyState, 'Susturulmuş:', audioElement.muted);
+
+                    // Önce sesi sustur ve yüklenmesini bekle
+                    audioElement.muted = true;
+                    audioElement.volume = 0;
+
+                    // Yüklenme durumunu bekle
+                    if (audioElement.readyState < 2) {
+                        await new Promise((resolve) => {
+                            audioElement.addEventListener('canplaythrough', resolve, { once: true });
+                            audioElement.load(); // Sesi yeniden yüklemeyi zorla
+                        });
+                    }
+
+                    // Çok kısa bir ses çal ve hemen durdur
+                    const playAttempt = await audioElement.play();
+                    if (playAttempt !== undefined) {
+                        await playAttempt; // Promise döndürürse bekle
+                    }
+
+                    // Ses ayarlarını normale çevir
+                    audioElement.muted = false;
+                    audioElement.volume = 1;
                     audioElement.currentTime = 0;
+                    audioElement.pause();
+
+                    console.log('Ses kilidi başarıyla açıldı');
+                    
+                    // UI güncellemeleri
                     hasInteracted = true;
                     document.getElementById('touchToScreen').style.display = 'none';
-                    document.removeEventListener('touchstart', unlockAudio);
                     document.removeEventListener('click', unlockAudio);
+
                 } catch (error) {
-                    console.log('Audio unlock failed:', error);
+                    console.error('Ses kilidi açılamadı:', error);
+                    // Hata durumunda yine de UI'yi güncelle
+                    hasInteracted = true;
+                    document.getElementById('touchToScreen').style.display = 'none';
+                    document.removeEventListener('click', unlockAudio);
                 }
             };
 
-            // Kullanıcı etkileşimi için event listener'lar
-            document.addEventListener('touchstart', unlockAudio);
+            // Kullanıcı etkileşimi için event listener
             document.addEventListener('click', unlockAudio);
 
             // Scale and position adjustments for the GLB model
@@ -170,6 +209,30 @@ document.addEventListener('DOMContentLoaded', () => {
             model_mixer = new THREE.AnimationMixer(model.scene);
             const modelAction = model_mixer.clipAction(model.animations[0]);
             modelAction.play();
+
+            //counter
+            let counter = 0;
+            let counterInterval = null;
+            let isPaused = true;
+
+            function startCounter() {
+                if (counterInterval) return; // Zaten çalışıyorsa yeni interval oluşturma
+                
+                counterInterval = setInterval(() => {
+                    if (!isPaused) {
+                        counter++;
+                        console.log(`Geçen süre: ${counter} saniye`);
+                        
+                        if (counter >= 31) {
+                            counter = 0;
+                            clearInterval(counterInterval);
+                            counterInterval = null;
+                            modelAction.paused = true;
+                            console.log('Animasyon tamamlandı!');
+                        }
+                    }
+                }, 1000);
+            }
 
             // Play/Pause button functionality
             const playButton = document.getElementById('playButton');
@@ -186,13 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     modelAction.paused = true;
                     video.pause();
                     playButton.classList.add('paused');
+
+                    isPaused = true; // Sayacı duraklat
                     
-                    // Calculate remaining timeout time
-                    if (animationTimeout) {
-                        clearTimeout(animationTimeout);
-                        const elapsedTime = Date.now() - timeoutStartTime;
-                        remainingTimeout = Math.max(31000 - elapsedTime, 0);
-                    }
+                    // // Calculate remaining timeout time
+                    // if (animationTimeout) {
+                    //     clearTimeout(animationTimeout);
+                    //     const elapsedTime = Date.now() - timeoutStartTime;
+                    //     remainingTimeout = Math.max(31000 - elapsedTime, 0);
+                    // }
                 } else {
                     // Resume everything
                     if (hasInteracted) {
@@ -204,13 +269,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     video.play();
                     playButton.classList.remove('paused');
 
-                    // Resume timeout with remaining time
-                    if (remainingTimeout > 0) {
-                        timeoutStartTime = Date.now();
-                        animationTimeout = setTimeout(() => {
-                            modelAction.paused = true;
-                        }, remainingTimeout);
-                    }
+                    // Sayacı başlat veya devam ettir
+                isPaused = false;
+                startCounter();
+                    // // Resume timeout with remaining time
+                    // if (remainingTimeout > 0) {
+                    //     timeoutStartTime = Date.now();
+                    //     animationTimeout = setTimeout(() => {
+                    //         modelAction.paused = true;
+                    //     }, remainingTimeout);
+                    // }
                 }
                 isPlaying = !isPlaying;
             });
@@ -228,7 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Target görünür olduğunda ve kaybolduğunda
             anchor.onTargetFound = () => {
+                playButton.style.pointerEvents = "auto";
                 playButton.classList.remove('paused');
+                document.getElementById('vcard-container').style.bottom = '20px';
+                
                 if (hasInteracted) {
                     audioElement.play().catch(error => {
                         console.log('Audio playback failed:', error);
@@ -237,23 +308,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 modelAction.play();
                 video.play();
                 document.getElementById('videoControlsContainer').style.display = 'flex';
-                // 31 saniye sonra animasyonu durdur
-                timeoutStartTime = Date.now();
-                remainingTimeout = 31000;
-                animationTimeout = setTimeout(() => {
-                    modelAction.paused = true;
-                }, 31000);
+                
+                // Sayacı başlat veya devam ettir
+                isPaused = false;
+                startCounter();
             };
 
             anchor.onTargetLost = () => {
+                playButton.style.pointerEvents = "none";
+                document.getElementById('vcard-container').style.bottom = '-200px';
+                isPaused = true; // Sayacı duraklat
+                console.log(`Sayac duraklatıldı: ${counter} saniye`);
+                
                 if (hasInteracted) {
                     audioElement.pause();
-                    audioElement.currentTime = 0;
+                    //audioElement.currentTime = 0;
                 }
                 modelAction.stop();
                 video.pause();
                 document.getElementById('videoControlsContainer').style.display = 'none';
-                playButton.classList.add('paused');
+                // playButton.classList.add('paused');
                 // Timeout'u temizle
                 if (animationTimeout) {
                     clearTimeout(animationTimeout);
