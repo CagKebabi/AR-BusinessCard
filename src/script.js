@@ -9,8 +9,8 @@ import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
 import floorModelGlb from './assets/catalog/smart_home_interior_floor_plan.glb?url';
 import floorModelGlb2 from './assets/catalog/3d_view_office_floor_plan_virtual_reality.glb?url';
 import floorModelGlb3 from './assets/catalog/youtube_button.glb?url';
-// import targetMind from './assets/businnesCard/vcard2.mind?url';
-import targetMind from './assets/businnesCard/targetsahmet.mind?url';
+import targetMind from './assets/businnesCard/vcard2.mind?url';
+// import targetMind from './assets/businnesCard/targetsahmet.mind?url';
 
 
 console.log(THREE);
@@ -129,8 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 opacity: 0.8
             });
             const platformMesh = new THREE.Mesh(platformGeometry, platformMaterial);
-            platformMesh.scale.set(0.5, 0.5, 0.5);
-            platformMesh.position.set(0.65, -0.32, 0.2);
+            platformMesh.scale.set(0.35, 0.35, 0.35);
+            platformMesh.position.set(0, -0.32, 0.2);
             platformMesh.rotation.y = Math.PI/2;
 
             // GLB model yükleyici ve animasyon
@@ -202,10 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('click', unlockAudio);
 
             // Scale and position adjustments for the GLB model
-            model.scene.scale.set(0.5, 0.5, 0.5);
-            model.scene.position.set(0.65, -0.3, 0.2);
+            model.scene.scale.set(0.4, 0.4, 0.4);
+            model.scene.position.set(0, -0.3, 0.2);
             model.scene.rotation.x = 0;
-            model.scene.rotation.y = 0.2;
+            model.scene.rotation.y = 0.5;
 
             // Setup animation mixer
             model_mixer = new THREE.AnimationMixer(model.scene);
