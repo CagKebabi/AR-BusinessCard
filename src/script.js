@@ -2,15 +2,11 @@
 import * as THREE from 'three';
 import {MindARThree} from 'mind-ar/dist/mindar-image-three.prod.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/examples/jsm/Addons.js';
 import glbModel from './assets/businnesCard/model_sunum_anim.glb?url';
 import previewVideo from './assets/businnesCard/technoSoftWebsitePreviewCorped3.mp4'
 import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
-import floorModelGlb from './assets/catalog/smart_home_interior_floor_plan.glb?url';
-import floorModelGlb2 from './assets/catalog/3d_view_office_floor_plan_virtual_reality.glb?url';
-import floorModelGlb3 from './assets/catalog/youtube_button.glb?url';
 import targetMind from './assets/businnesCard/vcard2.mind?url';
-// import targetMind from './assets/businnesCard/targetsahmet.mind?url';
+import { log } from 'three/tsl';
 
 
 console.log(THREE);
@@ -149,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Audio yükleyici
             const audioElement = new Audio(fbxModelAudio);
+            audioElement.load()
             let animationTimeout;
             let hasInteracted = false;
 
@@ -166,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (audioElement.readyState < 2) {
                         await new Promise((resolve) => {
                             audioElement.addEventListener('canplaythrough', resolve, { once: true });
-                            audioElement.load(); // Sesi yeniden yüklemeyi zorla
+                            //audioElement.load(); // Sesi yeniden yüklemeyi zorla
                         });
                     }
 
@@ -296,8 +293,26 @@ document.addEventListener('DOMContentLoaded', () => {
             anchor.group.add(videoMesh);
             anchor.group.add(platformMesh);
 
-            // Target görünür olduğunda ve kaybolduğunda
+            // Pozisyon değiştirme butonu ekle
+            const positionButton = document.createElement('button');
+            positionButton.style.position = 'fixed';
+            positionButton.style.bottom = '80px';
+            positionButton.style.left = '20px';
+            positionButton.style.zIndex = '1000';
+            positionButton.textContent = 'Pozisyonu Değiştir';
+            document.body.appendChild(positionButton);
+
+            // Buton tıklama eventi
+            positionButton.addEventListener('click', () => {
+                if (anchor.group) {
+                    mindarThree.stop()
+                }
+            });
+
+            // Target görünür olduğunda
             anchor.onTargetFound = () => {
+                console.log('Target Found!');
+                positionButton.style.display = 'block'; // Butonu göster
                 playButton.style.pointerEvents = "auto";
                 playButton.classList.remove('paused');
                 document.getElementById('vcard-container').style.bottom = '20px';
@@ -316,7 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 startCounter();
             };
 
+            // Target kaybolduğunda
             anchor.onTargetLost = () => {
+                positionButton.style.display = 'none'; // Butonu gizle
                 playButton.style.pointerEvents = "none";
                 document.getElementById('vcard-container').style.bottom = '-200px';
                 isPaused = true; // Sayacı duraklat
@@ -356,16 +373,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 videoMesh.scale.set(scale, scale, scale);
             });
 
+            
+
             // Animation loop
             const clock = new THREE.Clock();
             await mindarThree.start();
             renderer.setAnimationLoop(() => {
                 const delta = clock.getDelta();
-                
-                // Animasyon güncelleme
+                const camera = mindarThree.camera;
+
+                // Mesh'i sabit pozisyona yerleştir
+                // if (anchor.group) {
+                //     anchor.group.position.set(208.46, -11.88, -1933.76);
+                    
+                //     // Pozisyonları logla
+                //     const meshWorldPosition = new THREE.Vector3();
+                //     anchor.group.getWorldPosition(meshWorldPosition);
+                //     console.log('Güncel Pozisyonlar:');
+                //     console.log('Mesh:', {
+                //         x: meshWorldPosition.x.toFixed(2),
+                //         y: meshWorldPosition.y.toFixed(2),
+                //         z: meshWorldPosition.z.toFixed(2)
+                //     });
+                //     console.log('Kamera:', {
+                //         x: camera.position.x.toFixed(2),
+                //         y: camera.position.y.toFixed(2),
+                //         z: camera.position.z.toFixed(2)
+                //     });
+                // }
+
                 if (model_mixer) {
                     model_mixer.update(delta);
                 }
+                
                 renderer.render(scene, camera);
             });
         } catch (error) {
