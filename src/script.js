@@ -5,9 +5,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import glbModel from './assets/businnesCard/model_sunum_anim.glb?url';
 import previewVideo from './assets/businnesCard/technoSoftWebsitePreviewCorped3.mp4'
 import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
-import targetMind from './assets/businnesCard/vcard2.mind?url';
-import { log } from 'three/tsl';
-
+// import targetMind from './assets/businnesCard/vcard2.mind?url';
+import targetMind from './assets/businnesCard/multipleTarget.mind?url'; // MindAR hedef dosyası
 
 console.log(THREE);
 
@@ -250,13 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     playButton.classList.add('paused');
 
                     isPaused = true; // Sayacı duraklat
-                    
-                    // // Calculate remaining timeout time
-                    // if (animationTimeout) {
-                    //     clearTimeout(animationTimeout);
-                    //     const elapsedTime = Date.now() - timeoutStartTime;
-                    //     remainingTimeout = Math.max(31000 - elapsedTime, 0);
-                    // }
                 } else {
                     // Resume everything
                     if (hasInteracted) {
@@ -268,16 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     video.play();
                     playButton.classList.remove('paused');
 
-                    // Sayacı başlat veya devam ettir
+                // Sayacı başlat veya devam ettir
                 isPaused = false;
                 startCounter();
-                    // // Resume timeout with remaining time
-                    // if (remainingTimeout > 0) {
-                    //     timeoutStartTime = Date.now();
-                    //     animationTimeout = setTimeout(() => {
-                    //         modelAction.paused = true;
-                    //     }, remainingTimeout);
-                    // }
                 }
                 isPlaying = !isPlaying;
             });
@@ -285,34 +270,43 @@ document.addEventListener('DOMContentLoaded', () => {
             // Video player'ı konumlandır
             videoMesh.position.set(0, 0.7, 0);
             videoMesh.rotation.x = 0;
+            videoMesh.add(bgMesh);
 
             // Modelleri anchor'a ekle
             const anchor = mindarThree.addAnchor(0);
             anchor.group.add(model.scene);
-            videoMesh.add(bgMesh);
             anchor.group.add(videoMesh);
             anchor.group.add(platformMesh);
 
-            // Pozisyon değiştirme butonu ekle
-            const positionButton = document.createElement('button');
-            positionButton.style.position = 'fixed';
-            positionButton.style.bottom = '80px';
-            positionButton.style.left = '20px';
-            positionButton.style.zIndex = '1000';
-            positionButton.textContent = 'Pozisyonu Değiştir';
-            document.body.appendChild(positionButton);
-
-            // Buton tıklama eventi
-            positionButton.addEventListener('click', () => {
-                if (anchor.group) {
-                    mindarThree.stop()
-                }
-            });
+            const anchor2 = mindarThree.addAnchor(1);
+            anchor2.group.add(model.scene);
+            anchor2.group.add(videoMesh);
+            anchor2.group.add(platformMesh);
 
             // Target görünür olduğunda
+
             anchor.onTargetFound = () => {
                 console.log('Target Found!');
-                positionButton.style.display = 'block'; // Butonu göster
+                playButton.style.pointerEvents = "auto";
+                playButton.classList.remove('paused');
+                document.getElementById('vcard-container').style.bottom = '20px';
+                
+                if (hasInteracted) {
+                    audioElement.play().catch(error => {
+                        console.log('Audio playback failed:', error);
+                    });
+                }
+                modelAction.play();
+                video.play();
+                document.getElementById('videoControlsContainer').style.display = 'flex';
+                
+                // Sayacı başlat veya devam ettir
+                isPaused = false;
+                startCounter();
+            };
+
+            anchor2.onTargetFound = () => {
+                console.log('Target Found!');
                 playButton.style.pointerEvents = "auto";
                 playButton.classList.remove('paused');
                 document.getElementById('vcard-container').style.bottom = '20px';
@@ -333,7 +327,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Target kaybolduğunda
             anchor.onTargetLost = () => {
-                positionButton.style.display = 'none'; // Butonu gizle
+                playButton.style.pointerEvents = "none";
+                document.getElementById('vcard-container').style.bottom = '-200px';
+                isPaused = true; // Sayacı duraklat
+                console.log(`Sayac duraklatıldı: ${counter} saniye`);
+                
+                if (hasInteracted) {
+                    audioElement.pause();
+                    //audioElement.currentTime = 0;
+                }
+                modelAction.stop();
+                video.pause();
+                document.getElementById('videoControlsContainer').style.display = 'none';
+                // playButton.classList.add('paused');
+                // Timeout'u temizle
+                if (animationTimeout) {
+                    clearTimeout(animationTimeout);
+                }
+            };
+
+            anchor2.onTargetLost = () => {
                 playButton.style.pointerEvents = "none";
                 document.getElementById('vcard-container').style.bottom = '-200px';
                 isPaused = true; // Sayacı duraklat
@@ -380,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await mindarThree.start();
             renderer.setAnimationLoop(() => {
                 const delta = clock.getDelta();
-                const camera = mindarThree.camera;
+                //const camera = mindarThree.camera;
 
                 // Mesh'i sabit pozisyona yerleştir
                 // if (anchor.group) {
