@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 side: THREE.DoubleSide
             });
             const videoMesh = new THREE.Mesh(videoGeometry, videoMaterial);
-
+            const videoMeshClone = videoMesh.clone();
             // Arka plan plane geometrisi oluştur
             // const bgGeometry = new THREE.PlaneGeometry(1.1, 0.6625, 100, 100); // Biraz daha büyük boyut
             // RoundedRectangle şekli oluşturmak için
@@ -113,7 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 opacity: 0.5
             });
             const bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
+            const bgMeshClone = bgMesh.clone();
+
             bgMesh.position.set(0, 0, -0.03); // Video mesh'in hemen arkasına yerleştir
+            bgMeshClone.position.set(0, 0, -0.03); // Video mesh'in hemen arkasına yerleştir
 
             // Platform (Cylinder)
             const platformGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 32);
@@ -124,14 +127,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 opacity: 0.8
             });
             const platformMesh = new THREE.Mesh(platformGeometry, platformMaterial);
+            const platformMeshClone = platformMesh.clone();
+
             platformMesh.scale.set(0.35, 0.35, 0.35);
             platformMesh.position.set(0, -0.32, 0.2);
             platformMesh.rotation.y = Math.PI/2;
 
+            platformMeshClone.scale.set(0.35, 0.35, 0.35);
+            platformMeshClone.position.set(0, -0.32, 0.2);
+            platformMeshClone.rotation.y = Math.PI/2;
+
             // GLB model yükleyici ve animasyon
             let model_mixer;
+            let model_mixerClone;
+
             const loader = new GLTFLoader();
             const model = await loader.loadAsync(glbModel, (xhr) => {
+                const yuzde = Math.round((xhr.loaded / xhr.total) * 100);
+                console.log(`3D Model Yükleniyor: %${yuzde}`);
+                document.getElementById('progressContainer').innerText = `Yükleniyor: %${yuzde}`;
+                if (yuzde === 100) {
+                    console.log('3D Model yükleme tamamlandı! 🚀');
+                    document.getElementById('touchToScreenContent').style.display = 'block';
+                    document.getElementById('progressContainer').style.display = 'none';
+                }
+            });
+            const modelClone = await loader.loadAsync(glbModel, (xhr) => {
                 const yuzde = Math.round((xhr.loaded / xhr.total) * 100);
                 console.log(`3D Model Yükleniyor: %${yuzde}`);
                 document.getElementById('progressContainer').innerText = `Yükleniyor: %${yuzde}`;
@@ -203,10 +224,19 @@ document.addEventListener('DOMContentLoaded', () => {
             model.scene.rotation.x = 0;
             model.scene.rotation.y = 0.5;
 
+            modelClone.scene.scale.set(0.4, 0.4, 0.4);
+            modelClone.scene.position.set(0, -0.3, 0.2);
+            modelClone.scene.rotation.x = 0;
+            modelClone.scene.rotation.y = 0.5;
+
             // Setup animation mixer
             model_mixer = new THREE.AnimationMixer(model.scene);
             const modelAction = model_mixer.clipAction(model.animations[0]);
             modelAction.play();
+
+            model_mixerClone = new THREE.AnimationMixer(modelClone.scene);
+            const modelActionClone = model_mixerClone.clipAction(modelClone.animations[0]);
+            modelActionClone.play();
 
             //counter
             let counter = 0;
@@ -226,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             clearInterval(counterInterval);
                             counterInterval = null;
                             modelAction.paused = true;
+                            modelActionClone.paused = true;
                             console.log('Animasyon tamamlandı!');
                         }
                     }
@@ -245,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         audioElement.pause();
                     }
                     modelAction.paused = true;
+                    modelActionClone.paused = true;
                     video.pause();
                     playButton.classList.add('paused');
 
@@ -257,6 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                     modelAction.paused = false;
+                    modelActionClone.paused = false;
                     video.play();
                     playButton.classList.remove('paused');
 
@@ -270,7 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Video player'ı konumlandır
             videoMesh.position.set(0, 0.7, 0);
             videoMesh.rotation.x = 0;
+
+            videoMeshClone.position.set(0, 0.7, 0);
+            videoMeshClone.rotation.x = 0;
+
             videoMesh.add(bgMesh);
+            videoMeshClone.add(bgMeshClone);
 
             // Modelleri anchor'a ekle
             const anchor = mindarThree.addAnchor(0);
@@ -279,9 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
             anchor.group.add(platformMesh);
 
             const anchor2 = mindarThree.addAnchor(1);
-            anchor2.group.add(model.scene);
-            anchor2.group.add(videoMesh);
-            anchor2.group.add(platformMesh);
+            anchor2.group.add(modelClone.scene);
+            anchor2.group.add(videoMeshClone);
+            anchor2.group.add(platformMeshClone);
 
             // Target görünür olduğunda
 
@@ -316,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log('Audio playback failed:', error);
                     });
                 }
-                modelAction.play();
+                modelActionClone.play();
                 video.play();
                 document.getElementById('videoControlsContainer').style.display = 'flex';
                 
@@ -356,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     audioElement.pause();
                     //audioElement.currentTime = 0;
                 }
-                modelAction.stop();
+                modelActionClone.stop();
                 video.pause();
                 document.getElementById('videoControlsContainer').style.display = 'none';
                 // playButton.classList.add('paused');
@@ -417,6 +455,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (model_mixer) {
                     model_mixer.update(delta);
+                }
+
+                if (model_mixerClone) {
+                    model_mixerClone.update(delta);
                 }
                 
                 renderer.render(scene, camera);
