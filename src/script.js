@@ -331,14 +331,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // CSS3D nesnesi boyut ve pozisyon ayarları
             obj.position.set(0, 0, 0);
-            obj.scale.set(0.01, 0.01, 0.01); // CSS3D nesneleri için ölçek küçültmek gerekebilir
             
             // CSS3D nesnesini anchor'a ekle
             anchor2.group.add(obj);
             
             // HTML elementi görünür yap
             document.getElementById('ar-div').style.visibility = 'visible';
-            document.getElementById('ar-div').textContent = 'AR HTML Element!';  // Test için metni değiştir
 
             // Target görünür olduğunda
 
@@ -448,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Animation loop
             const clock = new THREE.Clock();
             await mindarThree.start();
+
             renderer.setAnimationLoop(() => {
                 const delta = clock.getDelta();
                 //const camera = mindarThree.camera;
@@ -480,13 +479,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     model_mixerClone.update(delta);
                 }
                 
+                cssRenderer.render(cssScene, camera);
                 renderer.render(scene, camera);
-                cssRenderer.render(cssScene, camera)
             });
         } catch (error) {
             console.error('Hata:', error);
             alert('Bir hata oluştu: ' + error.message);
         }
+        
     };
     start();
 });
