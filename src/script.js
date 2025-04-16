@@ -5,6 +5,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import glbModel from './assets/businnesCard/model_sunum_anim.glb?url';
 import previewVideo from './assets/businnesCard/technoSoftWebsitePreviewCorped3.mp4'
 import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
+import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js'; //html elementini threejs ile render etmek için kulllanılır
+import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'; //html elementini threejs ile render etmek için kulllanılır
 // import targetMind from './assets/businnesCard/vcard2.mind?url';
 import targetMind from './assets/businnesCard/multipleTarget.mind?url'; // MindAR hedef dosyası
 
@@ -35,7 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterBeta: 0.01,
             });
     
-            const { renderer, scene, camera } = mindarThree;
+            const { renderer, scene, camera, cssRenderer, cssScene } = mindarThree;
+
+            const obj = new CSS3DObject(document.getElementById('ar-div'));
 
             // Renderer ayarları
             renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -316,10 +320,25 @@ document.addEventListener('DOMContentLoaded', () => {
             anchor.group.add(videoMesh);
             anchor.group.add(platformMesh);
 
-            const anchor2 = mindarThree.addAnchor(1);
-            anchor2.group.add(modelClone.scene);
-            anchor2.group.add(videoMeshClone);
-            anchor2.group.add(platformMeshClone);
+            // Normal 3D nesneler için yoruma alınmış kod
+            // const anchor2 = mindarThree.addAnchor(1);
+            // anchor2.group.add(modelClone.scene);
+            // anchor2.group.add(videoMeshClone);
+            // anchor2.group.add(platformMeshClone);
+
+            // CSS3D anchor
+            const anchor2 = mindarThree.addCSSAnchor(1);
+            
+            // CSS3D nesnesi boyut ve pozisyon ayarları
+            obj.position.set(0, 0, 0);
+            obj.scale.set(0.01, 0.01, 0.01); // CSS3D nesneleri için ölçek küçültmek gerekebilir
+            
+            // CSS3D nesnesini anchor'a ekle
+            anchor2.group.add(obj);
+            
+            // HTML elementi görünür yap
+            document.getElementById('ar-div').style.visibility = 'visible';
+            document.getElementById('ar-div').textContent = 'AR HTML Element!';  // Test için metni değiştir
 
             // Target görünür olduğunda
 
@@ -462,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 renderer.render(scene, camera);
+                cssRenderer.render(cssScene, camera)
             });
         } catch (error) {
             console.error('Hata:', error);
