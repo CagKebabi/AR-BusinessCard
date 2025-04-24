@@ -3,12 +3,14 @@ import * as THREE from 'three';
 import {MindARThree} from 'mind-ar/dist/mindar-image-three.prod.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import glbModel from './assets/businnesCard/model_sunum_anim.glb?url';
+import glbModelTest from './assets/businnesCard/model_sunum_anim.glb?url';
 import previewVideo from './assets/businnesCard/technoSoftWebsitePreviewCorped3.mp4'
 import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
-import { CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js'; //html elementini threejs ile render etmek için kulllanılır
-import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'; //html elementini threejs ile render etmek için kulllanılır
 // import targetMind from './assets/businnesCard/vcard2.mind?url';
 import targetMind from './assets/businnesCard/multipleTarget.mind?url'; // MindAR hedef dosyası
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import gsap from 'gsap';
 
 console.log(THREE);
 
@@ -37,9 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterBeta: 0.01,
             });
     
-            const { renderer, scene, camera, cssRenderer, cssScene } = mindarThree;
+            const { renderer, scene, camera } = mindarThree;
 
-            const obj = new CSS3DObject(document.getElementById('ar-div'));
+
 
             // Renderer ayarları
             renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -74,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 side: THREE.DoubleSide
             });
             const videoMesh = new THREE.Mesh(videoGeometry, videoMaterial);
-            const videoMeshClone = videoMesh.clone();
+
             // Arka plan plane geometrisi oluştur
             // const bgGeometry = new THREE.PlaneGeometry(1.1, 0.6625, 100, 100); // Biraz daha büyük boyut
             // RoundedRectangle şekli oluşturmak için
@@ -122,6 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
             bgMesh.position.set(0, 0, -0.03); // Video mesh'in hemen arkasına yerleştir
             bgMeshClone.position.set(0, 0, -0.03); // Video mesh'in hemen arkasına yerleştir
 
+            // Video player'ı konumlandır
+            videoMesh.position.set(0, 0.7, 0);
+            videoMesh.rotation.x = 0;
+
+            videoMesh.add(bgMesh);
+
             // Platform (Cylinder)
             const platformGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 32);
             const platformMaterial = new THREE.MeshBasicMaterial({
@@ -141,9 +149,54 @@ document.addEventListener('DOMContentLoaded', () => {
             platformMeshClone.position.set(0, -0.32, 0.2);
             platformMeshClone.rotation.y = Math.PI/2;
 
+            // Text Geometry
+            // Font yükleme
+            const fontLoader = new FontLoader();
+            let textMesh = null;
+            fontLoader.load(
+            './assets/businnesCard/Cascadia Mono Medium_Regularfixed.json',
+            (font) => {
+                // Text geometry oluşturma
+                const textGeometry = new TextGeometry('Merhaba Dünya!', {
+                    font: font,
+                    size: 0.15,          // Metin boyutu küçültüldü
+                    height: 0.001,       // Çok düşük derinlik
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.0005, // Bevel kalınlığı azaltıldı
+                    bevelSize: 0.0005,     // Bevel boyutu azaltıldı
+                    bevelOffset: 0,
+                    bevelSegments: 2
+                });
+
+                // Text mesh'i ortala
+                textGeometry.computeBoundingBox();
+                const centerOffset = new THREE.Vector3();
+                textGeometry.boundingBox.getCenter(centerOffset).multiplyScalar(-1);
+
+                const textMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    specular: 0x999999
+                });
+
+                textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.scale.x = 0.001;
+                textMesh.scale.y = 0.001;
+                textMesh.scale.z = 0.001;
+
+                // Text mesh'i tam ortalama
+                textGeometry.computeBoundingBox();
+                const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+                
+                textMesh.position.x = -textWidth / 2;
+                textMesh.position.y = -textHeight / 2 + 0.2; // Y pozisyonunu biraz yukarı kaydır
+                textMesh.position.z = 0;
+            }
+            );    
+
             // GLB model yükleyici ve animasyon
             let model_mixer;
-            let model_mixerClone;
 
             const loader = new GLTFLoader();
             const model = await loader.loadAsync(glbModel, (xhr) => {
@@ -156,16 +209,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('progressContainer').style.display = 'none';
                 }
             });
-            const modelClone = await loader.loadAsync(glbModel, (xhr) => {
-                const yuzde = Math.round((xhr.loaded / xhr.total) * 100);
-                console.log(`3D Model Yükleniyor: %${yuzde}`);
-                document.getElementById('progressContainer').innerText = `Yükleniyor: %${yuzde}`;
-                if (yuzde === 100) {
-                    console.log('3D Model yükleme tamamlandı! 🚀');
-                    document.getElementById('touchToScreenContent').style.display = 'block';
-                    document.getElementById('progressContainer').style.display = 'none';
-                }
-            });
+
+            // Scale and position adjustments for the GLB model
+            model.scene.scale.set(0.4, 0.4, 0.4);
+            model.scene.position.set(0, -0.3, 0.2);
+            model.scene.rotation.x = 0;
+            model.scene.rotation.y = 0.5;
+
+            // Setup animation mixer
+            model_mixer = new THREE.AnimationMixer(model.scene);
+            const modelAction = model_mixer.clipAction(model.animations[0]);
+            modelAction.play();
             
             // Audio yükleyici
             const audioElement = new Audio(fbxModelAudio);
@@ -222,26 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Kullanıcı etkileşimi için event listener
             document.addEventListener('click', unlockAudio);
 
-            // Scale and position adjustments for the GLB model
-            model.scene.scale.set(0.4, 0.4, 0.4);
-            model.scene.position.set(0, -0.3, 0.2);
-            model.scene.rotation.x = 0;
-            model.scene.rotation.y = 0.5;
-
-            modelClone.scene.scale.set(0.4, 0.4, 0.4);
-            modelClone.scene.position.set(0, -0.3, 0.2);
-            modelClone.scene.rotation.x = 0;
-            modelClone.scene.rotation.y = 0.5;
-
-            // Setup animation mixer
-            model_mixer = new THREE.AnimationMixer(model.scene);
-            const modelAction = model_mixer.clipAction(model.animations[0]);
-            modelAction.play();
-
-            model_mixerClone = new THREE.AnimationMixer(modelClone.scene);
-            const modelActionClone = model_mixerClone.clipAction(modelClone.animations[0]);
-            modelActionClone.play();
-
             //counter
             let counter = 0;
             let counterInterval = null;
@@ -260,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             clearInterval(counterInterval);
                             counterInterval = null;
                             modelAction.paused = true;
-                            modelActionClone.paused = true;
+                            //modelActionClone.paused = true;
                             console.log('Animasyon tamamlandı!');
                         }
                     }
@@ -280,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         audioElement.pause();
                     }
                     modelAction.paused = true;
-                    modelActionClone.paused = true;
                     video.pause();
                     playButton.classList.add('paused');
 
@@ -293,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                     modelAction.paused = false;
-                    modelActionClone.paused = false;
                     video.play();
                     playButton.classList.remove('paused');
 
@@ -304,40 +336,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 isPlaying = !isPlaying;
             });
 
-            // Video player'ı konumlandır
-            videoMesh.position.set(0, 0.7, 0);
-            videoMesh.rotation.x = 0;
-
-            videoMeshClone.position.set(0, 0.7, 0);
-            videoMeshClone.rotation.x = 0;
-
-            videoMesh.add(bgMesh);
-            videoMeshClone.add(bgMeshClone);
-
             // Modelleri anchor'a ekle
             const anchor = mindarThree.addAnchor(0);
             anchor.group.add(model.scene);
             anchor.group.add(videoMesh);
             anchor.group.add(platformMesh);
 
-            // Normal 3D nesneler için yoruma alınmış kod
-            // const anchor2 = mindarThree.addAnchor(1);
-            // anchor2.group.add(modelClone.scene);
-            // anchor2.group.add(videoMeshClone);
-            // anchor2.group.add(platformMeshClone);
-
             // CSS3D anchor
-            const anchor2 = mindarThree.addCSSAnchor(1);
+            // const anchor2 = mindarThree.addCSSAnchor(1);
+            // anchor2.group.add(obj);
+            const anchor2 = mindarThree.addAnchor(1);
+            anchor2.group.add(textMesh);
+            //anchor2.group.add(modelTest.scene);
             
-            // CSS3D nesnesi boyut ve pozisyon ayarları
-            obj.position.set(0, 0, 0);
-            
-            // CSS3D nesnesini anchor'a ekle
-            anchor2.group.add(obj);
-            
-            // HTML elementi görünür yap
-            document.getElementById('ar-div').style.visibility = 'visible';
-
             // Target görünür olduğunda
 
             anchor.onTargetFound = () => {
@@ -361,23 +372,25 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             anchor2.onTargetFound = () => {
-                console.log('Target Found!');
-                playButton.style.pointerEvents = "auto";
-                playButton.classList.remove('paused');
-                document.getElementById('vcard-container').style.bottom = '20px';
+                gsap.fromTo(textMesh.scale, { duration: 1, x: 0, y: 0 }, { x: 1, y: 1 });
+                //document.getElementById('turnTheCardMessage').style.display = 'flex';
+                // console.log('Target Found!');
+                // playButton.style.pointerEvents = "auto";
+                // playButton.classList.remove('paused');
+                // document.getElementById('vcard-container').style.bottom = '20px';
                 
-                if (hasInteracted) {
-                    audioElement.play().catch(error => {
-                        console.log('Audio playback failed:', error);
-                    });
-                }
-                modelActionClone.play();
-                video.play();
-                document.getElementById('videoControlsContainer').style.display = 'flex';
+                // if (hasInteracted) {
+                //     audioElement.play().catch(error => {
+                //         console.log('Audio playback failed:', error);
+                //     });
+                // }
+                // //modelActionClone.play();
+                // video.play();
+                // document.getElementById('videoControlsContainer').style.display = 'flex';
                 
-                // Sayacı başlat veya devam ettir
-                isPaused = false;
-                startCounter();
+                // // Sayacı başlat veya devam ettir
+                // isPaused = false;
+                // startCounter();
             };
 
             // Target kaybolduğunda
@@ -402,23 +415,24 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             anchor2.onTargetLost = () => {
-                playButton.style.pointerEvents = "none";
-                document.getElementById('vcard-container').style.bottom = '-200px';
-                isPaused = true; // Sayacı duraklat
-                console.log(`Sayac duraklatıldı: ${counter} saniye`);
+                document.getElementById('turnTheCardMessage').style.display = 'none';
+                // playButton.style.pointerEvents = "none";
+                // document.getElementById('vcard-container').style.bottom = '-200px';
+                // isPaused = true; // Sayacı duraklat
+                // console.log(`Sayac duraklatıldı: ${counter} saniye`);
                 
-                if (hasInteracted) {
-                    audioElement.pause();
-                    //audioElement.currentTime = 0;
-                }
-                modelActionClone.stop();
-                video.pause();
-                document.getElementById('videoControlsContainer').style.display = 'none';
-                // playButton.classList.add('paused');
-                // Timeout'u temizle
-                if (animationTimeout) {
-                    clearTimeout(animationTimeout);
-                }
+                // if (hasInteracted) {
+                //     audioElement.pause();
+                //     //audioElement.currentTime = 0;
+                // }
+                // //modelActionClone.stop();
+                // video.pause();
+                // document.getElementById('videoControlsContainer').style.display = 'none';
+                // // playButton.classList.add('paused');
+                // // Timeout'u temizle
+                // if (animationTimeout) {
+                //     clearTimeout(animationTimeout);
+                // }
             };
 
             // Rotasyon kontrollerini dinle
@@ -451,36 +465,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const delta = clock.getDelta();
                 //const camera = mindarThree.camera;
 
-                // Mesh'i sabit pozisyona yerleştir
-                // if (anchor.group) {
-                //     anchor.group.position.set(208.46, -11.88, -1933.76);
-                    
-                //     // Pozisyonları logla
-                //     const meshWorldPosition = new THREE.Vector3();
-                //     anchor.group.getWorldPosition(meshWorldPosition);
-                //     console.log('Güncel Pozisyonlar:');
-                //     console.log('Mesh:', {
-                //         x: meshWorldPosition.x.toFixed(2),
-                //         y: meshWorldPosition.y.toFixed(2),
-                //         z: meshWorldPosition.z.toFixed(2)
-                //     });
-                //     console.log('Kamera:', {
-                //         x: camera.position.x.toFixed(2),
-                //         y: camera.position.y.toFixed(2),
-                //         z: camera.position.z.toFixed(2)
-                //     });
-                // }
-
                 if (model_mixer) {
                     model_mixer.update(delta);
                 }
 
-                if (model_mixerClone) {
-                    model_mixerClone.update(delta);
-                }
-                
-                cssRenderer.render(cssScene, camera);
+                // if (model_mixerClone) {
+                //     model_mixerClone.update(delta);
+                // }
                 renderer.render(scene, camera);
+                
             });
         } catch (error) {
             console.error('Hata:', error);

@@ -15,6 +15,7 @@
     "vite-plugin-restart": "^0.4.1"
   },
   "dependencies": {
+    "gsap": "^3.12.7",
     "mind-ar": "^1.2.5",
     "three": "^0.173.0"
   }
