@@ -10,6 +10,7 @@ import fbxModelAudio from './assets/businnesCard/businessCardSpeech.mp3?url';
 import targetMind from './assets/businnesCard/multipleTarget.mind?url'; // MindAR hedef dosyası
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { mockWithImage } from './libs/camera-mock';
 import gsap from 'gsap';
 
 console.log(THREE);
@@ -31,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Kamera erişimi iste
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             stream.getTracks().forEach(track => track.stop());
+
+            mockWithImage('./assets/businnesCard/mockimg.jpeg'); // Mocking with an image for testing
 
             const mindarThree = new MindARThree({
                 container: document.body,
