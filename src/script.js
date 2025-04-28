@@ -193,7 +193,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 textMesh.position.y = -textHeight / 2 + 0.2; // Y pozisyonunu biraz yukarı kaydır
                 textMesh.position.z = 0;
             }
-            );    
+            );  
+            
+            // Cam küre için materyal oluşturma
+            const sphereMaterial = new THREE.MeshPhysicalMaterial({
+                // color: 0xffffff,
+                // metalness: 0,
+                // roughness: 0.1,
+                // transmission: 0.9, // Geçirgenlik (saydamlık) 
+                // thickness: 0.5,    // Kalınlık
+                // //envMap: environmentMap,
+                // envMapIntensity: 1,
+                // clearcoat: 1.0,    // Parlak yüzey katmanı
+                // clearcoatRoughness: 0.1
+                metalness: .9,
+                roughness: .05,
+                envMapIntensity: 0.9,
+                clearcoat: 1,
+                transparent: true,
+                opacity: .5,
+                reflectivity: 0.2,
+                refractionRatio: 0.985,
+                ior: 0.9,
+                side: THREE.BackSide,
+            });
+            
+            // Küre geometrisi oluşturma
+            const sphereGeometry = new THREE.SphereGeometry(2, 64, 64);
+            const glassSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            glassSphere.scale.set(0.1, 0.1, 0.1);
 
             // GLB model yükleyici ve animasyon
             let model_mixer;
@@ -347,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // anchor2.group.add(obj);
             const anchor2 = mindarThree.addAnchor(1);
             anchor2.group.add(textMesh);
+            anchor2.group.add(glassSphere);
             //anchor2.group.add(modelTest.scene);
             
             // Target görünür olduğunda
