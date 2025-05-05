@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stream.getTracks().forEach(track => track.stop());
 
             //mockWithImage('./assets/businnesCard/mockimg.jpeg'); // Mocking with an image for testing
-            mockWithVideo('./assets/businnesCard/mockvideo2.mp4');
+            mockWithVideo('./assets/businnesCard/mockvideo3.mp4');
 
             const mindarThree = new MindARThree({
                 container: document.body,
