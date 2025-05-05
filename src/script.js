@@ -11,6 +11,7 @@ import targetMind from './assets/businnesCard/multipleTarget.mind?url'; // MindA
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { mockWithImage } from './libs/camera-mock';
+import { mockWithVideo } from './libs/camera-mock';
 import gsap from 'gsap';
 
 console.log(THREE);
@@ -33,7 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             stream.getTracks().forEach(track => track.stop());
 
-            mockWithImage('./assets/businnesCard/mockimg.jpeg'); // Mocking with an image for testing
+            //mockWithImage('./assets/businnesCard/mockimg.jpeg'); // Mocking with an image for testing
+            mockWithVideo('./assets/businnesCard/mockvideo2.mp4');
 
             const mindarThree = new MindARThree({
                 container: document.body,
@@ -155,19 +157,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Text Geometry
             // Font yükleme
             const fontLoader = new FontLoader();
+            // Text Mesh1
             let textMesh = null;
             fontLoader.load(
             './assets/businnesCard/Cascadia Mono Medium_Regularfixed.json',
             (font) => {
                 // Text geometry oluşturma
-                const textGeometry = new TextGeometry('Merhaba Dünya!', {
+                const textGeometry = new TextGeometry('SOFTWARE DEVELOPMENT', {
                     font: font,
                     size: 0.15,          // Metin boyutu küçültüldü
                     height: 0.001,       // Çok düşük derinlik
                     curveSegments: 12,
                     bevelEnabled: true,
                     bevelThickness: 0.0005, // Bevel kalınlığı azaltıldı
-                    bevelSize: 0.0005,     // Bevel boyutu azaltıldı
+                    bevelSize: 0.008,     // Bevel boyutu azaltıldı
                     bevelOffset: 0,
                     bevelSegments: 2
                 });
@@ -192,23 +195,146 @@ document.addEventListener('DOMContentLoaded', () => {
                 const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
                 const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
                 
-                textMesh.position.x = -textWidth / 2;
+                textMesh.position.x = -textWidth / 4;
                 textMesh.position.y = -textHeight / 2 + 0.2; // Y pozisyonunu biraz yukarı kaydır
                 textMesh.position.z = 0;
             }
             );  
+
+            // Text Mesh2
+            let textMesh2 = null;
+            fontLoader.load(
+            './assets/businnesCard/Cascadia Mono Medium_Regularfixed.json',
+            (font) => {
+                // Text geometry oluşturma
+                const textGeometry = new TextGeometry('DIGITAL PUBLISHING', {
+                    font: font,
+                    size: 0.15,          // Metin boyutu küçültüldü
+                    height: 0.001,       // Çok düşük derinlik
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.0005, // Bevel kalınlığı azaltıldı
+                    bevelSize: 0.008,     // Bevel boyutu azaltıldı
+                    bevelOffset: 0,
+                    bevelSegments: 2
+                });
+
+                // Text mesh'i ortala
+                textGeometry.computeBoundingBox();
+                const centerOffset = new THREE.Vector3();
+                textGeometry.boundingBox.getCenter(centerOffset).multiplyScalar(-1);
+
+                const textMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    specular: 0x999999
+                });
+
+                textMesh2 = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh2.scale.x = 1;
+                textMesh2.scale.y = 1;
+                textMesh2.scale.z = 0.001;
+
+                // Text mesh'i tam ortalama
+                textGeometry.computeBoundingBox();
+                const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+                
+                textMesh2.position.x = -textWidth / 4;
+                textMesh2.position.y = -textHeight / 2 + 0.2; // Y pozisyonunu biraz yukarı kaydır
+                textMesh2.position.z = 0;
+            }
+            );  
+
+             // Text Mesh3
+            let textMesh3 = null;
+            fontLoader.load(
+            './assets/businnesCard/Cascadia Mono Medium_Regularfixed.json',
+            (font) => {
+                // Text geometry oluşturma
+                const textGeometry = new TextGeometry('WEB AR DEVELOPMENT', {
+                    font: font,
+                    size: 0.15,          // Metin boyutu küçültüldü
+                    height: 0.001,       // Çok düşük derinlik
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.0005, // Bevel kalınlığı azaltıldı
+                    bevelSize: 0.008,     // Bevel boyutu azaltıldı
+                    bevelOffset: 0,
+                    bevelSegments: 2
+                });
+
+                // Text mesh'i ortala
+                textGeometry.computeBoundingBox();
+                const centerOffset = new THREE.Vector3();
+                textGeometry.boundingBox.getCenter(centerOffset).multiplyScalar(-1);
+
+                const textMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    specular: 0x999999
+                });
+
+                textMesh3 = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh3.scale.x = 1;
+                textMesh3.scale.y = 1;
+                textMesh3.scale.z = 0.001;
+
+                // Text mesh'i tam ortalama
+                textGeometry.computeBoundingBox();
+                const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+                
+                textMesh3.position.x = -textWidth / 4;
+                textMesh3.position.y = -textHeight / 2 + 0.2; // Y pozisyonunu biraz yukarı kaydır
+                textMesh3.position.z = 0;
+            }
+            );
+
+            // Text Mesh4
+            let textMesh4 = null;
+            fontLoader.load(
+            './assets/businnesCard/Cascadia Mono Medium_Regularfixed.json',
+            (font) => {
+                // Text geometry oluşturma
+                const textGeometry = new TextGeometry('WEB DESIGN', {
+                    font: font,
+                    size: 0.15,          // Metin boyutu küçültüldü
+                    height: 0.001,       // Çok düşük derinlik
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.0005, // Bevel kalınlığı azaltıldı
+                    bevelSize: 0.008,     // Bevel boyutu azaltıldı
+                    bevelOffset: 0,
+                    bevelSegments: 2
+                });
+
+                // Text mesh'i ortala
+                textGeometry.computeBoundingBox();
+                const centerOffset = new THREE.Vector3();
+                textGeometry.boundingBox.getCenter(centerOffset).multiplyScalar(-1);
+
+                const textMaterial = new THREE.MeshPhongMaterial({ 
+                    color: 0xffffff,
+                    specular: 0x999999
+                });
+
+                textMesh4 = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh4.scale.x = 1;
+                textMesh4.scale.y = 1;
+                textMesh4.scale.z = 0.001;
+
+                // Text mesh'i tam ortalama
+                textGeometry.computeBoundingBox();
+                const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+                
+                textMesh4.position.x = -textWidth / 4;
+                textMesh4.position.y = -textHeight / 2 + 0.2; // Y pozisyonunu biraz yukarı kaydır
+                textMesh4.position.z = 0;
+            }
+            );
             
             // Cam küre için materyal oluşturma
             const sphereMaterial = new THREE.MeshPhysicalMaterial({
-                // color: 0xffffff,
-                // metalness: 0,
-                // roughness: 0.1,
-                // transmission: 0.9, // Geçirgenlik (saydamlık) 
-                // thickness: 0.5,    // Kalınlık
-                // //envMap: environmentMap,
-                // envMapIntensity: 1,
-                // clearcoat: 1.0,    // Parlak yüzey katmanı
-                // clearcoatRoughness: 0.1
                 metalness: .9,
                 roughness: .05,
                 envMapIntensity: 0.9,
@@ -372,18 +498,30 @@ document.addEventListener('DOMContentLoaded', () => {
             anchor.group.add(model.scene);
             anchor.group.add(videoMesh);
             anchor.group.add(platformMesh);
+            anchor.group.add(textMesh);
+            anchor.group.add(textMesh2);
+            anchor.group.add(textMesh3);
+            anchor.group.add(textMesh4);
+            //anchor.group.add(glassSphere);
 
             // CSS3D anchor
             // const anchor2 = mindarThree.addCSSAnchor(1);
             // anchor2.group.add(obj);
             const anchor2 = mindarThree.addAnchor(1);
-            anchor2.group.add(textMesh);
-            anchor2.group.add(glassSphere);
             //anchor2.group.add(modelTest.scene);
             
             // Target görünür olduğunda
 
             anchor.onTargetFound = () => {
+                gsap.timeline()
+                .fromTo(textMesh.scale, { duration: 0.25, x: 0, y: 0 }, { x: 0.5, y: 0.5 })
+                .fromTo(textMesh.position, { duration: 0.25, y: 0 }, { duration: 0.25, y: -0.5, ease: "back.out(1.7)"})
+                .fromTo(textMesh2.scale, { duration: 0.25, x: 0, y: 0 }, { x: 0.5, y: 0.5 })
+                .fromTo(textMesh2.position, { duration: 0.25, y: 0 }, { duration: 0.25, y: -0.6, ease: "back.out(1.7)"})
+                .fromTo(textMesh3.scale, { duration: 0.25, x: 0, y: 0 }, { x: 0.5, y: 0.5 })
+                .fromTo(textMesh3.position, { duration: 0.25, y: 0 }, { duration: 0.25, y: -0.7, ease: "back.out(1.7)"})
+                .fromTo(textMesh4.scale, { duration: 0.25, x: 0, y: 0 }, { x: 0.5, y: 0.5 })
+                .fromTo(textMesh4.position, { duration: 0.25, y: 0 }, { duration: 0.25, y: -0.8, ease: "back.out(1.7)"})
                 console.log('Target Found!');
                 playButton.style.pointerEvents = "auto";
                 playButton.classList.remove('paused');
@@ -404,8 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             anchor2.onTargetFound = () => {
-                gsap.fromTo(textMesh.scale, { duration: 1, x: 0, y: 0 }, { x: 1, y: 1 });
-                //document.getElementById('turnTheCardMessage').style.display = 'flex';
+                document.getElementById('turnTheCardMessage').style.display = 'flex';
                 // console.log('Target Found!');
                 // playButton.style.pointerEvents = "auto";
                 // playButton.classList.remove('paused');
