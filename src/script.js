@@ -15,6 +15,7 @@ import { mockWithVideo } from "./libs/camera-mock";
 //import textMono from "./assets/businnesCard/Cascadia Mono Medium_Regularfixed.json"
 import textMonoJson from "./assets/businnesCard/CascadiaMonoMedium_Regularfixed.json?url";
 import gsap from "gsap";
+import { is } from "mind-ar/dist/controller-mGt1s8dJ";
 
 console.log(THREE);
 
@@ -353,6 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
       model_mixer = new THREE.AnimationMixer(model.scene);
       const modelAction = model_mixer.clipAction(model.animations[0]);
       modelAction.play();
+      modelAction.paused = true;
 
       // Audio yükleyici
       const audioElement = new Audio(fbxModelAudio);
@@ -446,7 +448,31 @@ document.addEventListener("DOMContentLoaded", () => {
       let timeoutStartTime = 0;
       let remainingTimeout = 31000;
 
+      let isFirstClicked = false;
+
       playButton.addEventListener("click", () => {
+        // İlk tıklamada otomatik olarak play moduna geç
+        if (!isFirstClicked) {
+          isFirstClicked = true;
+          isPlaying = false; // İlk tıklamada play moduna geçebilmek için false yapıyoruz
+          
+          // Resume everything (ilk tıklamada otomatik olarak başlat)
+          if (hasInteracted) {
+            audioElement.play().catch((error) => {
+              console.log("Audio playback failed:", error);
+            });
+          }
+          modelAction.paused = false;
+          video.play();
+          playButton.classList.remove("paused");
+
+          // Sayacı başlat
+          isPaused = false;
+          startCounter();
+          return; // İlk tıklamada işlemi tamamla ve çık
+        }
+        
+        // İlk tıklamadan sonraki tıklamalar için normal mantık
         if (isPlaying) {
           // Pause everything
           if (hasInteracted) {
@@ -538,22 +564,23 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         console.log("Target Found!");
         playButton.style.pointerEvents = "auto";
-        playButton.classList.remove("paused");
+        
         document.getElementById("vcard-container").style.bottom = "20px";
+        document.getElementById("videoControlsContainer").style.display ="flex";
 
-        if (hasInteracted) {
-          audioElement.play().catch((error) => {
-            console.log("Audio playback failed:", error);
-          });
+        if (isFirstClicked) {
+          playButton.classList.remove("paused");
+          if (hasInteracted) {
+            audioElement.play().catch((error) => {
+              console.log("Audio playback failed:", error);
+            });
+          }
+          modelAction.play();
+          video.play();
+          // Sayacı başlat veya devam ettir
+          isPaused = false;
+          startCounter();
         }
-        modelAction.play();
-        video.play();
-        document.getElementById("videoControlsContainer").style.display =
-          "flex";
-
-        // Sayacı başlat veya devam ettir
-        isPaused = false;
-        startCounter();
       };
 
       anchor2.onTargetFound = () => {
@@ -583,19 +610,20 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("vcard-container").style.bottom = "-200px";
         isPaused = true; // Sayacı duraklat
         console.log(`Sayac duraklatıldı: ${counter} saniye`);
+        document.getElementById("videoControlsContainer").style.display ="none";
 
-        if (hasInteracted) {
-          audioElement.pause();
-          //audioElement.currentTime = 0;
-        }
-        modelAction.stop();
-        video.pause();
-        document.getElementById("videoControlsContainer").style.display =
-          "none";
-        // playButton.classList.add('paused');
-        // Timeout'u temizle
-        if (animationTimeout) {
-          clearTimeout(animationTimeout);
+        if (isFirstClicked) {
+          if (hasInteracted) {
+            audioElement.pause();
+            //audioElement.currentTime = 0;
+          }
+          modelAction.stop();
+          video.pause();
+          // playButton.classList.add('paused');
+          // Timeout'u temizle
+          if (animationTimeout) {
+            clearTimeout(animationTimeout);
+          }
         }
       };
 
