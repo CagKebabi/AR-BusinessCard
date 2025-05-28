@@ -52,6 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
         imageTargetSrc: targetMind,
         filterMinCF: 0.001,
         filterBeta: 0.01,
+        // warmupTolerance: 5,
+        // missTolerance: 5,
       });
 
       const { renderer, scene, camera } = mindarThree;
@@ -307,24 +309,32 @@ document.addEventListener("DOMContentLoaded", () => {
         textMesh4.scale.set(0.001, 0.001, 0.001);
       });
 
-      // Cam küre için materyal oluşturma
-      const sphereMaterial = new THREE.MeshPhysicalMaterial({
-        metalness: 0.9,
-        roughness: 0.05,
-        envMapIntensity: 0.9,
-        clearcoat: 1,
-        transparent: true,
-        opacity: 0.5,
-        reflectivity: 0.2,
-        refractionRatio: 0.985,
-        ior: 0.9,
-        side: THREE.BackSide,
-      });
+      // Text Mesh Background
+      const textBackgroundGeometry = new THREE.PlaneGeometry(1.3,0.5)
+      const textBackgroundMaterial = new THREE.MeshBasicMaterial({color:0x1b2a47})
 
-      // Küre geometrisi oluşturma
-      const sphereGeometry = new THREE.SphereGeometry(2, 64, 64);
-      const glassSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-      glassSphere.scale.set(0.1, 0.1, 0.1);
+      const textBackgroundMesh = new THREE.Mesh(textBackgroundGeometry, textBackgroundMaterial)
+
+      textBackgroundMesh.position.y = -0.65
+
+      // // Cam küre için materyal oluşturma
+      // const sphereMaterial = new THREE.MeshPhysicalMaterial({
+      //   metalness: 0.9,
+      //   roughness: 0.05,
+      //   envMapIntensity: 0.9,
+      //   clearcoat: 1,
+      //   transparent: true,
+      //   opacity: 0.5,
+      //   reflectivity: 0.2,
+      //   refractionRatio: 0.985,
+      //   ior: 0.9,
+      //   side: THREE.BackSide,
+      // });
+
+      // // Küre geometrisi oluşturma
+      // const sphereGeometry = new THREE.SphereGeometry(2, 64, 64);
+      // const glassSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      // glassSphere.scale.set(0.1, 0.1, 0.1);
 
       // GLB model yükleyici ve animasyon
       let model_mixer;
@@ -506,6 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
       anchor.group.add(model.scene);
       anchor.group.add(videoMesh);
       anchor.group.add(platformMesh);
+      anchor.group.add(textBackgroundMesh)
       anchor.group.add(textMesh);
       anchor.group.add(textMesh2);
       anchor.group.add(textMesh3);
